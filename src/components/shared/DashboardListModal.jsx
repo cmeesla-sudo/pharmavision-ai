@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 export default function DashboardListModal({ isOpen, onClose, title, type, medicines }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -7,19 +7,26 @@ export default function DashboardListModal({ isOpen, onClose, title, type, medic
 
   // Process data based on type
   const processedData = useMemo(() => {
+    if (!medicines || !Array.isArray(medicines)) return [];
+
     let data = [...medicines];
     
     if (type === 'low_stock') {
       // Filter for low stock (e.g., <= 10)
-      data = data.filter(m => m.quantity <= 10);
+      data = data.filter(m => (m.quantity || 0) <= 10);
     } else if (type === 'expiring') {
       // Filter for expiring within 30 days
       const today = new Date();
       data = data.filter(m => {
         if (!m.expiry_date) return false;
-        const expiry = new Date(m.expiry_date);
-        const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-        return daysLeft >= 0 && daysLeft <= 30;
+        try {
+          const expiry = new Date(m.expiry_date);
+          if (isNaN(expiry.getTime())) return false;
+          const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+          return daysLeft >= 0 && daysLeft <= 30;
+        } catch (e) {
+          return false;
+        }
       });
       // Sort by nearest expiry
       data.sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date));
@@ -28,15 +35,29 @@ export default function DashboardListModal({ isOpen, onClose, title, type, medic
     // Apply search
     if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
-      data = data.filter(m => 
-        m.medicine_name.toLowerCase().includes(lowerSearch) || 
-        (m.manufacturer && m.manufacturer.toLowerCase().includes(lowerSearch)) ||
-        (m.batch_number && m.batch_number.toLowerCase().includes(lowerSearch))
-      );
+      data = data.filter(m => {
+        const name = m.medicine_name || '';
+        const mfg = m.manufacturer || '';
+        const batch = m.batch_number || '';
+        return name.toLowerCase().includes(lowerSearch) || 
+               mfg.toLowerCase().includes(lowerSearch) ||
+               batch.toLowerCase().includes(lowerSearch);
+      });
     }
 
     return data;
   }, [medicines, type, searchTerm]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const getStockStatus = (qty) => {
     if (qty === 0) return { label: 'Critical', color: 'bg-red-500/10 text-red-500 border-red-500/20' };
@@ -54,9 +75,9 @@ export default function DashboardListModal({ isOpen, onClose, title, type, medic
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" 
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300" 
         onClick={onClose}
       />
       
