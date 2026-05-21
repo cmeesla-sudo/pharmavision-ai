@@ -343,7 +343,11 @@ export default function AIScannerPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Side / Visual Source Selection */}
-        <section className={`lg:col-span-${scanResultMode !== 'idle' ? '5' : '6'} space-y-6 transition-all duration-500`}>
+        <section className={
+          scanResultMode !== 'idle'
+            ? 'lg:col-span-5 space-y-6 transition-all duration-500'
+            : 'lg:col-span-6 space-y-6 transition-all duration-500'
+        }>
           <div className="glass-panel p-6 rounded-3xl space-y-6 border border-outline-variant/30 shadow-sm">
             <div className="flex items-center justify-between pb-4 border-b border-outline-variant/20">
               <h3 className="font-headline-sm text-headline-sm font-extrabold text-on-surface flex items-center gap-2">
@@ -469,7 +473,11 @@ export default function AIScannerPage() {
         </section>
 
         {/* Right Side / Assistant Results Display */}
-        <section className={`lg:col-span-${scanResultMode !== 'idle' ? '7' : '6'} space-y-6 transition-all duration-500`}>
+        <section className={
+          scanResultMode !== 'idle'
+            ? 'lg:col-span-7 space-y-6 transition-all duration-500'
+            : 'lg:col-span-6 space-y-6 transition-all duration-500'
+        }>
           
           <AnimatePresence mode="wait">
             {/* IDLE STATE */}
