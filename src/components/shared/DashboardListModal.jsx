@@ -3,8 +3,6 @@ import { useState, useMemo, useEffect } from 'react';
 export default function DashboardListModal({ isOpen, onClose, title, type, medicines }) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (!isOpen) return null;
-
   // Process data based on type
   const processedData = useMemo(() => {
     if (!medicines || !Array.isArray(medicines)) return [];
@@ -73,6 +71,8 @@ export default function DashboardListModal({ isOpen, onClose, title, type, medic
     if (daysLeft <= 7) return { days: daysLeft, color: 'bg-red-500/10 text-red-500 border-red-500/20' };
     return { days: daysLeft, color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' };
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">

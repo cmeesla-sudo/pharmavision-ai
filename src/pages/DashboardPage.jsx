@@ -197,13 +197,15 @@ export default function DashboardPage() {
         <span className="material-symbols-outlined text-[28px]">add</span>
       </Link>
 
-      <DashboardListModal 
-        isOpen={modalType !== null}
-        onClose={() => setModalType(null)}
-        type={modalType}
-        title={modalType === 'low_stock' ? 'Low Stock Items' : 'Expiring Medicines (30d)'}
-        medicines={medicines}
-      />
+      {modalType !== null && (
+        <DashboardListModal 
+          isOpen={true}
+          onClose={() => setModalType(null)}
+          type={modalType}
+          title={modalType === 'low_stock' ? 'Low Stock Items' : 'Expiring Medicines (30d)'}
+          medicines={medicines || []}
+        />
+      )}
     </div>
   )
 }
