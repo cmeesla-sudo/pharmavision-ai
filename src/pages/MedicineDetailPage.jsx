@@ -32,10 +32,10 @@ export default function MedicineDetailPage() {
         setDeleting(true);
         const { error } = await remove(id);
         if (!error) {
-          showToast(`"${med?.medicine_name}" removed successfully`, 'success');
+          showToast('Medicine deleted successfully', 'success');
           navigate('/inventory');
         } else {
-          showToast('Error deleting medicine. Please try again.', 'error');
+          showToast('Failed to delete medicine', 'error');
           setDeleting(false);
         }
       }

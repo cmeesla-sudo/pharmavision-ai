@@ -153,19 +153,25 @@ export function useMedicines() {
   }
 
   const remove = async (id) => {
+    if (user) {
+      try {
+        const { error: supabaseError } = await supabase.from('medicines').delete().eq('id', id).eq('user_id', user.id)
+        if (supabaseError) {
+          console.error("Supabase delete failed:", supabaseError)
+          return { error: supabaseError }
+        }
+      } catch (err) {
+        console.error("Delete exception:", err)
+        return { error: err }
+      }
+    }
+
     setMedicines(p => {
       const filtered = p.filter(m => m.id !== id)
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered))
       return filtered
     })
 
-    if (user) {
-      try {
-        await supabase.from('medicines').delete().eq('id', id).eq('user_id', user.id)
-      } catch (err) {
-        console.warn("Demo mode: Delete simulated locally", err)
-      }
-    }
     return { error: null }
   }
 
