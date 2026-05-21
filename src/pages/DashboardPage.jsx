@@ -1,11 +1,13 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useMedicines } from '../hooks/useMedicines'
 import { useBilling } from '../hooks/useBilling'
 import { useNotifications } from '../hooks/useNotifications'
+import DashboardListModal from '../components/shared/DashboardListModal'
 
-const StatCard = ({ icon, iconBg, label, value, badge, badgeColor, sub }) => (
-  <div className="bg-surface-container-lowest p-4 md:p-5 rounded-xl border border-outline-variant/30 soft-lift hover:border-primary/30 transition-colors">
+const StatCard = ({ icon, iconBg, label, value, badge, badgeColor, sub, onView }) => (
+  <div className="bg-surface-container-lowest p-4 md:p-5 rounded-xl border border-outline-variant/30 soft-lift hover:border-primary/30 transition-colors relative group">
     <div className="flex justify-between items-start mb-3">
       <div className={`p-2.5 ${iconBg} rounded-lg`}>
         <span className="material-symbols-outlined text-[22px]">{icon}</span>
@@ -13,12 +15,23 @@ const StatCard = ({ icon, iconBg, label, value, badge, badgeColor, sub }) => (
       {badge && <span className={`font-label-sm text-label-sm px-2 py-0.5 rounded-full text-[11px] ${badgeColor}`}>{badge}</span>}
     </div>
     <p className="font-label-md text-label-md text-on-surface-variant text-[12px]">{label}</p>
-    <h3 className="font-headline-lg text-headline-lg font-bold text-on-surface mt-0.5 text-[28px]">{value}</h3>
+    <div className="flex items-end justify-between mt-0.5">
+      <h3 className="font-headline-lg text-headline-lg font-bold text-on-surface text-[28px]">{value}</h3>
+      {onView && (
+        <button 
+          onClick={onView} 
+          className="px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 rounded-lg text-[12px] font-bold text-on-surface-variant hover:text-primary transition-all flex items-center gap-1 opacity-0 group-hover:opacity-100"
+        >
+          View <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </button>
+      )}
+    </div>
     {sub && <p className="text-[11px] text-on-surface-variant mt-1">{sub}</p>}
   </div>
 )
 
 export default function DashboardPage() {
+  const [modalType, setModalType] = useState(null)
   const { profile } = useAuth()
   const { medicines, stats, loading: medLoading } = useMedicines()
   const { sessions, todayRevenue }                 = useBilling()
@@ -59,8 +72,24 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <StatCard icon="medication"   iconBg="bg-primary/10 text-primary"    label="Total Medicines" value={medLoading ? '—' : stats.total.toString()} badge={stats.total > 0 ? 'Active' : null} badgeColor="text-primary bg-secondary-container/20" />
         <StatCard icon="payments"     iconBg="bg-secondary/10 text-secondary" label="Today's Revenue"  value={`₹${todayRevenue().toFixed(2)}`} badge={sessions.filter(s => s.created_at?.startsWith(new Date().toISOString().split('T')[0])).length + ' bills'} badgeColor="text-secondary bg-secondary-container/20" />
-        <StatCard icon="inventory"    iconBg="bg-error/10 text-error"         label="Low Stock Items"  value={medLoading ? '—' : stats.lowStock.toString()} badge={stats.lowStock > 0 ? 'Action Needed' : 'All Good'} badgeColor={stats.lowStock > 0 ? 'text-error bg-error-container/30' : 'text-primary bg-secondary-container/20'} />
-        <StatCard icon="event_busy"   iconBg="bg-tertiary/10 text-tertiary"   label="Expiring (30d)"  value={medLoading ? '—' : stats.expiringSoon.toString()} badge={stats.expiringSoon > 0 ? 'Review' : 'Clear'} badgeColor={stats.expiringSoon > 0 ? 'text-error bg-error-container/30' : 'text-primary bg-secondary-container/20'} />
+        <StatCard 
+          icon="inventory"    
+          iconBg="bg-error/10 text-error"         
+          label="Low Stock Items"  
+          value={medLoading ? '—' : stats.lowStock.toString()} 
+          badge={stats.lowStock > 0 ? 'Action Needed' : 'All Good'} 
+          badgeColor={stats.lowStock > 0 ? 'text-error bg-error-container/30' : 'text-primary bg-secondary-container/20'} 
+          onView={() => setModalType('low_stock')}
+        />
+        <StatCard 
+          icon="event_busy"   
+          iconBg="bg-tertiary/10 text-tertiary"   
+          label="Expiring (30d)"  
+          value={medLoading ? '—' : stats.expiringSoon.toString()} 
+          badge={stats.expiringSoon > 0 ? 'Review' : 'Clear'} 
+          badgeColor={stats.expiringSoon > 0 ? 'text-error bg-error-container/30' : 'text-primary bg-secondary-container/20'} 
+          onView={() => setModalType('expiring')}
+        />
       </div>
 
       {/* Main grid */}
@@ -167,6 +196,14 @@ export default function DashboardPage() {
         className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40">
         <span className="material-symbols-outlined text-[28px]">add</span>
       </Link>
+
+      <DashboardListModal 
+        isOpen={modalType !== null}
+        onClose={() => setModalType(null)}
+        type={modalType}
+        title={modalType === 'low_stock' ? 'Low Stock Items' : 'Expiring Medicines (30d)'}
+        medicines={medicines}
+      />
     </div>
   )
 }
